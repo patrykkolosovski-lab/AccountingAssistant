@@ -771,6 +771,17 @@ footer span {
   border: 0;
   padding: 6px;
 }
+.form-actions {
+  margin-top: 16px;
+}
+.danger {
+  color: #a43f2f;
+  border-color: #dfb5ab;
+  background: #fff7f5;
+}
+.danger:hover:not(:disabled) {
+  background: #ffebe7;
+}
 .preview {
   background: #f1f3ed;
   border: 1px solid var(--line);
@@ -841,21 +852,6 @@ footer span {
 }
 .toast span {
   margin-left: 25px;
-}
-.mapping {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 0 12px;
-}
-.import-preview {
-  max-height: 280px;
-  overflow: auto;
-  margin: 20px 0;
-}
-.import-preview .row {
-  padding: 8px;
-  border-bottom: 1px solid var(--line);
-  font-size: 11px;
 }
 .ocr-text {
   white-space: pre-wrap;

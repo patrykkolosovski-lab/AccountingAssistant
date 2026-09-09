@@ -20,9 +20,8 @@ import Decimal from "decimal.js";
 import * as XLSX from "xlsx";
 import * as api from "./api";
 import { empty, type Data, type Entry, type Receipt } from "./types";
-import { money, totals, periodIndex } from "./domain";
+import { money, totals, periodIndex, updateEvidenceLinks } from "./domain";
 import EntryForm, { newEntry } from "./EntryForm";
-import ImportDialog from "./ImportDialog";
 import Settings from "./Settings";
 import Preview from "./Preview";
 import { extract, cancelOcr } from "./ocr";
@@ -42,7 +41,6 @@ export default function App() {
     [sort, ss] = useState("date"),
     [ascending, sa] = useState(false),
     [entry, setEntry] = useState<Entry>(),
-    [importing, si] = useState(false),
     [selected, sselected] = useState<string[]>([]),
     [receipt, sreceipt] = useState<Receipt>(),
     [view, sv] = useState("grid"),
@@ -53,7 +51,7 @@ export default function App() {
   const ref = useRef(data);
   ref.current = data;
   const editorOpen = useRef(false);
-  editorOpen.current = !!entry || importing || busy;
+  editorOpen.current = !!entry || busy;
   const cancelled = useRef(false);
   const reload = async () => {
     const d = await api.load();
@@ -403,10 +401,6 @@ export default function App() {
                   Transactions <span className="count">{filtered.length}</span>
                 </h2>
                 <div className="row">
-                  <button onClick={() => si(true)}>
-                    <Upload size={15} />
-                    Import
-                  </button>
                   <button onClick={() => run(() => exportRows("csv"))}>
                     <Download size={15} />
                     CSV
@@ -591,7 +585,7 @@ export default function App() {
                   </h3>
                   <p>
                     {data.years.length
-                      ? "Add a transaction or import your existing spreadsheet."
+                      ? "Add a transaction to start keeping your records."
                       : "Create your categories and six periods before recording transactions."}
                   </p>
                   <button
@@ -781,32 +775,40 @@ export default function App() {
           onClose={() => setEntry(undefined)}
           onSave={async (e) => {
             const d = await api.load();
+            const previous = d.entries.find((x) => x.id === e.id);
+            const entries = [...d.entries.filter((x) => x.id !== e.id), e];
+            const affected = [
+              ...new Set([...(previous?.receiptIds || []), ...e.receiptIds]),
+            ];
             await commit(
               {
                 ...d,
-                entries: [...d.entries.filter((x) => x.id !== e.id), e],
-                receipts: d.receipts.map((receipt) =>
-                  e.receiptIds.includes(receipt.id)
-                    ? { ...receipt, status: "ready" }
-                    : receipt,
-                ),
+                entries,
+                receipts: updateEvidenceLinks(d.receipts, entries, affected),
               },
               "Saved transaction " + e.party,
             );
           }}
-        />
-      )}
-      {importing && (
-        <ImportDialog
-          data={data}
-          onClose={() => si(false)}
-          onSave={async (entries) => {
-            const d = await api.load();
-            await commit(
-              { ...d, entries: [...d.entries, ...entries] },
-              `Imported ${entries.length} transactions`,
-            );
-          }}
+          onDelete={
+            data.entries.some((x) => x.id === entry.id)
+              ? async (e) => {
+                  const d = await api.load();
+                  const entries = d.entries.filter((x) => x.id !== e.id);
+                  await commit(
+                    {
+                      ...d,
+                      entries,
+                      receipts: updateEvidenceLinks(
+                        d.receipts,
+                        entries,
+                        e.receiptIds,
+                      ),
+                    },
+                    "Deleted transaction " + e.party,
+                  );
+                }
+              : undefined
+          }
         />
       )}
       {receipt && (

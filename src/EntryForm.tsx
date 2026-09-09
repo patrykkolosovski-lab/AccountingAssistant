@@ -3,16 +3,19 @@ import type { Data, Entry } from "./types";
 import { uid } from "./types";
 import { itemTotal, money, validateEntry, amount, isLocked } from "./domain";
 import Preview from "./Preview";
+import { Trash2 } from "lucide-react";
 export default function EntryForm({
   data,
   initial,
   onSave,
   onClose,
+  onDelete,
 }: {
   data: Data;
   initial: Entry;
   onSave: (e: Entry) => Promise<void>;
   onClose: () => void;
+  onDelete?: (e: Entry) => Promise<void>;
 }) {
   const [e, set] = useState<Entry>(structuredClone(initial)),
     [error, se] = useState(""),
@@ -242,9 +245,38 @@ export default function EntryForm({
               </p>
             )}
             {error && <p className="error">{error}</p>}
-            <button className="primary" disabled={locked || busy}>
-              {busy ? "Saving…" : "Save transaction"}
-            </button>
+            <div className="row spread form-actions">
+              {onDelete && (
+                <button
+                  type="button"
+                  className="danger"
+                  disabled={locked || busy}
+                  onClick={async () => {
+                    if (
+                      !window.confirm(
+                        "Delete this transaction? This cannot be undone.",
+                      )
+                    )
+                      return;
+                    try {
+                      se("");
+                      sb(true);
+                      await onDelete(initial);
+                      onClose();
+                    } catch (x) {
+                      se(String(x));
+                    } finally {
+                      sb(false);
+                    }
+                  }}
+                >
+                  <Trash2 size={16} /> Delete transaction
+                </button>
+              )}
+              <button className="primary" disabled={locked || busy}>
+                {busy ? "Saving…" : "Save transaction"}
+              </button>
+            </div>
           </form>
           <Preview receipt={data.receipts.find((r) => r.id === preview)} />
         </div>

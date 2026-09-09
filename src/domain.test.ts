@@ -9,6 +9,7 @@ import {
   validateEntry,
   periodIndex,
   suggest,
+  updateEvidenceLinks,
 } from "./domain";
 import { empty, type Year, type Entry } from "./types";
 const year: Year = {
@@ -77,6 +78,38 @@ describe("periods and validation", () => {
     const d = structuredClone(data);
     d.years[0].periods[0].locked = true;
     expect(() => validateEntry(d, entry)).toThrow("locked");
+  });
+});
+describe("evidence links", () => {
+  const receipts = [
+    {
+      id: "r1",
+      name: "one.pdf",
+      mime: "application/pdf",
+      categoryId: "",
+      status: "ready" as const,
+    },
+    {
+      id: "r2",
+      name: "two.pdf",
+      mime: "application/pdf",
+      categoryId: "",
+      status: "ready" as const,
+    },
+  ];
+  it("marks evidence unlinked after its last transaction is deleted", () => {
+    expect(updateEvidenceLinks(receipts, [], ["r1"])[0].status).toBe(
+      "unlinked",
+    );
+  });
+  it("keeps evidence linked when another transaction still uses it", () => {
+    expect(
+      updateEvidenceLinks(
+        receipts,
+        [{ ...entry, receiptIds: ["r1"] }],
+        ["r1"],
+      )[0].status,
+    ).toBe("ready");
   });
 });
 describe("import formats", () => {

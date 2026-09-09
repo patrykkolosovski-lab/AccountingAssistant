@@ -1,5 +1,5 @@
 import Decimal from "decimal.js";
-import type { Data, Entry, Item, Year, Suggestion } from "./types";
+import type { Data, Entry, Item, Receipt, Year, Suggestion } from "./types";
 export const money = (v: string | number) =>
   new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" }).format(
     Number(v),
@@ -20,6 +20,24 @@ export const isLocked = (d: Data, e: Entry) =>
   d.years.some((y) =>
     y.periods.some((p) => p.locked && p.start <= e.date && e.date <= p.end),
   );
+export const updateEvidenceLinks = (
+  receipts: Receipt[],
+  entries: Entry[],
+  affectedReceiptIds: string[],
+) => {
+  const affected = new Set(affectedReceiptIds);
+  const linked = new Set(entries.flatMap((entry) => entry.receiptIds));
+  return receipts.map((receipt) =>
+    affected.has(receipt.id)
+      ? {
+          ...receipt,
+          status: linked.has(receipt.id)
+            ? ("ready" as const)
+            : ("unlinked" as const),
+        }
+      : receipt,
+  );
+};
 export const validDate = (s: string) =>
   /^\d{4}-\d{2}-\d{2}$/.test(s) &&
   !Number.isNaN(Date.parse(s)) &&
