@@ -1,0 +1,37 @@
+name: Desktop build and tests
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: macos-latest
+            target: x86_64-apple-darwin
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - run: npm ci
+      - run: npm test
+      - run: npm run assets
+      - run: cargo test --manifest-path src-tauri/Cargo.toml
+      - run: npm run tauri -- build --target ${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Treasurer-${{ matrix.target }}
+          path: src-tauri/target/${{ matrix.target }}/release/bundle/

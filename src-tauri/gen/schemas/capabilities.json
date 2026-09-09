@@ -1,0 +1,1 @@
+{"main":{"identifier":"main","description":"Local Treasurer window","local":true,"windows":["main"],"permissions":["core:default","dialog:allow-open","dialog:allow-save"]}}

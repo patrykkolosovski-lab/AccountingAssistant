@@ -1,0 +1,11 @@
+export type Category={id:string;name:string;color:string;archived:boolean};
+export type Period={start:string;end:string;locked:boolean};
+export type Year={id:string;name:string;opening:string;periods:Period[]};
+export type Item={description:string;quantity:string;price:string};
+export type Entry={id:string;kind:'income'|'expense';date:string;categoryId:string;party:string;items:Item[];total:string;comments:string;receiptIds:string[];source?:string};
+export type Receipt={id:string;name:string;mime:string;categoryId:string;status:'unlinked'|'review'|'ready';text?:string;suggestions?:Suggestion};
+export type Suggestion={party?:string;date?:string;total?:string;items?:Item[]};
+export type Audit={at:string;action:string};
+export type Data={revision:number;categories:Category[];years:Year[];entries:Entry[];receipts:Receipt[];audit:Audit[];incoming:string;accountingUpdatedAt?:string};
+export const empty:Data={revision:0,categories:[],years:[],entries:[],receipts:[],audit:[],incoming:'',accountingUpdatedAt:''};
+export const uid=()=>crypto.randomUUID();

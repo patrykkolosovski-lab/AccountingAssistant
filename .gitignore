@@ -1,0 +1,9 @@
+node_modules/
+dist/
+src-tauri/target/
+public/ocr/*
+!public/ocr/.gitkeep
+.DS_Store
+artifacts/
+playwright-report/
+test-results/
