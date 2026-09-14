@@ -1,53 +1,111 @@
-# Treasurer
+<div align="center">
 
-A local desktop workspace for a Dutch student association. Windows 10/11 x64 and macOS 12+ (Intel and Apple Silicon) are the intended targets. No cloud account, subscription, telemetry, or paid OCR service is used.
+# Treasurer.
 
-## Run and build
+### Your association’s finances, receipts, and handover — in one local workspace.
 
-Install Node.js 22+, Rust stable, and the [Tauri platform prerequisites](https://tauri.app/start/prerequisites/). macOS requires working Xcode command-line tools. Windows requires the MSVC C++ build tools and WebView2.
+A desktop app built for the everyday work of a Dutch student association treasurer.
+Track money in and out, keep the evidence behind each transaction, and prepare the next handover.
+
+**Offline by design · Local storage · Dutch & English OCR**
+
+[Explore the demo](#a-tour-of-treasurer) · [Run locally](#run-locally) · [Read the guide](docs/guide.md)
+
+</div>
+
+![Financial overview with income, expenses, net movement, and searchable transactions](docs/images/financial-overview.png)
+
+## A clear view of the books
+
+Treasurer brings financial records and their supporting documents together. Review the year, find a payment, check its receipt, and export the records you need without switching between scattered folders and spreadsheets.
+
+| Everyday task | How Treasurer helps |
+| --- | --- |
+| Understand the finances | Income, expenses, net movement, and a recorded closing balance in one overview. |
+| Find a transaction | Search and filter by year, period, category, type, date, or missing evidence. |
+| Organise receipts | A searchable library for PDFs, PNGs, and JPEGs, linked to financial records. |
+| Reduce manual entry | Local Dutch and English OCR suggests values for review against the source. |
+| Prepare reports | Export the filtered transaction list to CSV or Excel. |
+| Hand over the role | Create a full backup containing the workspace and original evidence files. |
+
+## A tour of Treasurer
+
+### 1. Start with the financial overview
+
+Choose a financial year to see its records and totals. Narrow the list to a period or category, check transactions without evidence, and mark the books **Up to date** after reconciliation. The latest confirmation stays visible the next time you open the app.
+
+*The overview above shows the main workspace. Black bars in the supplied screenshots are existing redactions.*
+
+### 2. Bring the evidence together
+
+Drop receipts, invoices, or screenshots into the **Receipt Library**, or browse for files. Search filenames and recognised text, filter the library, and see which documents are linked to records. Originals remain in the local library.
+
+![Receipt Library with file upload, search, category and status filters, and linked evidence](docs/images/receipt-library.png)
+
+An optional incoming folder is checked on launch and every 15 seconds while the app is open. Local OCR helps turn documents into reviewed records; uploading a receipt alone does not create a financial movement.
+
+### 3. Record the payment and its details
+
+Create an income or expense record with a date, counterparty, category, item lines, payment total, and comments. Attach supporting evidence and preview it alongside the form. Missing evidence is flagged so you can return to it later.
+
+![New transaction form with income and expense tabs, item totals, comments, and evidence preview](docs/images/new-transaction.png)
+
+### 4. Make the workspace fit your association
+
+Create colour-coded categories, configure a financial year with six consecutive periods, set the opening balance, and lock completed periods. Choose an incoming receipt folder and create or restore a backup from the same settings screen.
+
+![Settings with categories, financial periods and locks, incoming folder, and backup controls](docs/images/categories-and-settings.png)
+
+## Run locally
+
+The native desktop app provides persistent records, evidence access, and backups. Install Node.js 22+, Rust stable, and the platform build tools described in the [setup guide](docs/guide.md#run-and-build).
 
 ```sh
+git clone https://github.com/patrykkolosovski-lab/AccountingAssistant.git
+cd AccountingAssistant
 npm ci
 npm run assets
-npm test
 npm run desktop
 ```
 
-`npm run bundle` downloads missing English/Dutch OCR resources at build time and creates the native installer on the host platform. Runtime recognition uses bundled assets without a network connection. `npm run dev` opens a visual browser preview; it intentionally cannot persist records or access desktop evidence.
+The asset step downloads missing Dutch and English OCR language files. Once prepared, recognition runs locally without a network connection.
 
-Build Windows installers on Windows. On macOS, install the relevant Rust target and use `npm run tauri -- build --target aarch64-apple-darwin` or `--target x86_64-apple-darwin` after preparing assets. A GitHub Actions build matrix is provided; running it is optional and subject to your account's free CI allowance. No workflow publishes releases automatically.
+For a visual browser preview, run `npm run dev`. The browser preview cannot persist records or access desktop evidence.
 
-Unsigned Windows installers may show SmartScreen warnings. macOS builds are not notarised and downloaded copies may be blocked by Gatekeeper; use the OS's per-app approval flow for a trusted build or build locally. The project does not disable system security. Paid store distribution/signing is not part of this app.
+To create a native installer on your host platform:
 
-## First use
+```sh
+npm run bundle
+```
 
-1. Open Categories & Settings, create categories and a financial year. Six two-month calendar periods are offered as editable defaults; preview and confirm your dates.
-2. Set the opening bank balance for the beginning of that year.
-3. Add evidence in Receipt Library, or select an incoming folder in Settings. The app scans on launch and polls every 15 seconds while running. It imports supported files directly in that folder, not nested directories.
-4. Select receipts and run extraction. OCR suggests the transaction date and other recognised values; review them against the source and manually select a category.
-5. Record or import bank movements. Receipt upload itself never creates financial movement.
-6. Export reports and make a full backup regularly. Restore on another computer for handover; stop editing the old copy.
+Intended targets are Windows 10/11 x64 and macOS 12+ on Intel and Apple Silicon. Builds are unsigned; platform setup and installation notes are in the [guide](docs/guide.md#run-and-build).
 
-Use the green **Up to date** button on Home after reconciling the records. The app saves and displays the most recent confirmation date whenever it opens.
+## Built to stay local
 
-## Imports and exports
+- **No cloud account or subscription.** The workspace uses a local SQLite database and stores original evidence in the operating system’s app-data directory.
+- **Recognition stays on the computer.** PDF.js handles PDF text and rendering; Tesseract.js performs Dutch and English OCR. Suggested values need human review.
+- **Backups support handover.** Full archives preserve application state and originals. Report exports do not replace backups.
 
-CSV and XLSX import provides sheet selection, column mapping, decimal/date conventions, explicit category mapping, row errors, and opt-in inclusion of likely duplicates. Signed amounts use positive=income and negative=expense. Alternatively map separate non-negative income and expense columns. Create missing categories in Settings first. Only selected valid rows are committed, in one database transaction.
+Backups are not encrypted. Keep them on trusted storage and maintain one active workspace when transferring between computers. See [data and backups](docs/guide.md#data-and-backups) and [recognition limitations](docs/guide.md#recognition-limitations) for details.
 
-Export reflects the currently filtered Home list. CSV and XLSX include original source references, evidence filenames, and item detail. Full backups, not report spreadsheets, preserve original files and all application state.
+## Under the hood
 
-## Data and backups
+| Layer | Technology |
+| --- | --- |
+| Interface | React 19, TypeScript, Vite, Lucide icons |
+| Desktop runtime | Tauri 2 and Rust |
+| Storage | SQLite via rusqlite and local evidence files |
+| Document processing | PDF.js and Tesseract.js |
+| Spreadsheet handling | SheetJS |
+| Financial arithmetic | Decimal.js |
+| Verification | Vitest, Playwright, and Rust tests |
 
-The application stores a SQLite database and content-addressed original files in the OS app-data directory for `nl.association.treasurer`. SQLite stores a versioned, revision-controlled workspace document, plus an evidence index; item lines, links, periods, extraction results, and history live within that document. The backend serialises access and rejects stale saves and modifications to locked records.
+Run the core checks with:
 
-Backups contain a consistent SQLite snapshot, originals, a format version, and SHA-256 checksums. Restore validates content before committing, makes a `safety-<timestamp>.zip` in app data, and clears the incoming folder setting because paths differ between computers. Backups are not encrypted. They should be kept on trusted storage. Never synchronise a live SQLite database between concurrently active computers.
+```sh
+npm test
+npm run build
+cargo test --manifest-path src-tauri/Cargo.toml
+```
 
-## Recognition limitations
-
-PDF.js reads embedded text and renders scanned pages. Tesseract.js runs Dutch/English recognition locally. Conservative parsing suggests labelled parties, unambiguous dates/totals, and simple balanced item rows. Complex tables, handwriting, poor photos, and mixed tax/discount layouts need manual input. Extraction never changes a saved transaction. JPEG/PNG/PDF are supported; HEIC must be converted before import.
-
-## Verification
-
-`npm test` checks financial rounding, totals, period boundaries, validation, decimal/date parsing, and conservative OCR parsing. `npm run build` checks TypeScript and builds the frontend. Native Rust tests cover evidence deduplication and backup checksums/roundtrip. Run `cargo test --manifest-path src-tauri/Cargo.toml` and build each native target.
-
-Manual release acceptance: offline PDF/photo recognition, multi-page preview, folder ingestion, lock/edit rejection, CSV/XLSX mapping, restart persistence, archive corruption rejection, and transfer of a backup between Windows and macOS. A successful frontend build alone is not proof of native platform compatibility.
+The [desktop build workflow](.github/workflows/build.yml) builds Windows, Apple Silicon, and Intel Mac targets. The [operating and development guide](docs/guide.md) covers first use, exports, backup behaviour, and native release acceptance checks.
